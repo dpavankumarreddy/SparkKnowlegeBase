@@ -28,50 +28,53 @@ public class App {
     }
 
     SparkConf conf = new SparkConf()
-                .setAppName("Spark App");
+		.setAppName("Spark App");
 
-      
-        JavaSparkContext context = new JavaSparkContext(conf);
+    //Simple Word count   
+	JavaSparkContext context = new JavaSparkContext(conf);
 
-		JavaRDD<String> file = 	context.textFile(args[0]);
-		JavaRDD<String> words = file.flatMap(
-			new FlatMapFunction<String, String>() {
-				@Override
-				public Iterable<String> call(String line) {
-					return Arrays.asList(line.split(" "));
-				}
+	JavaRDD<String> file = 	context.textFile(args[0]);
+	
+	//map
+	JavaRDD<String> words = file.flatMap(
+		new FlatMapFunction<String, String>() {
+			@Override
+			public Iterable<String> call(String line) {
+				return Arrays.asList(line.split(" "));
 			}
-		);
-		
-		JavaPairRDD<String, Integer> pairs = words.mapToPair(
-			new PairFunction<String, String, Integer>() {
-				@Override
-				public Tuple2<String, Integer> call(String word) {
-					return new Tuple2<String, Integer>(word, 1);
-				}
-			}
-		);
-		
-		JavaPairRDD<String, Integer> counts = pairs.reduceByKey(
-			new Function2<Integer, Integer, Integer>() {
-				@Override
-				public Integer call(Integer a, Integer b) { 
-					return a + b; 
-				}
-			}
-		);
-		
-		List<Tuple2<String, Integer>> list1 = pairs.collect();
-		List<Tuple2<String, Integer>> list = counts.collect();
-		
-		System.out.println("BEFORE REDUCE");
-		for(Tuple2<String, Integer> item : list1){
-			System.out.println(item.toString());
 		}
-		
-		System.out.println("AFTER REDUCE");
-		for(Tuple2<String, Integer> item : list){
-			System.out.println(item.toString());
+	);
+	
+	JavaPairRDD<String, Integer> pairs = words.mapToPair(
+		new PairFunction<String, String, Integer>() {
+			@Override
+			public Tuple2<String, Integer> call(String word) {
+				return new Tuple2<String, Integer>(word, 1);
+			}
 		}
+	);
+	
+	//group and reduce
+	JavaPairRDD<String, Integer> counts = pairs.reduceByKey(
+		new Function2<Integer, Integer, Integer>() {
+			@Override
+			public Integer call(Integer a, Integer b) { 
+				return a + b; 
+			}
+		}
+	);
+	
+	List<Tuple2<String, Integer>> list1 = pairs.collect();
+	List<Tuple2<String, Integer>> list = counts.collect();
+	
+	System.out.println("BEFORE REDUCE");
+	for(Tuple2<String, Integer> item : list1){
+		System.out.println(item.toString());
+	}
+	
+	System.out.println("AFTER REDUCE");
+	for(Tuple2<String, Integer> item : list){
+		System.out.println(item.toString());
+	}
   }
 }
