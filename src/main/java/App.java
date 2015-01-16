@@ -54,27 +54,20 @@ public class App {
 		}
 	);
 	
-	//group and reduce
-	JavaPairRDD<String, Integer> counts = pairs.reduceByKey(
-		new Function2<Integer, Integer, Integer>() {
-			@Override
-			public Integer call(Integer a, Integer b) { 
-				return a + b; 
-			}
+	
+	//groupByKey and do aggregation separately
+	JavaPairRDD<String, Iterable<Integer>> counts2 = pairs.groupByKey();
+	List<Tuple2<String, Iterable<Integer>>> list = counts2.collect();
+	for(Tuple2<String, Iterable<Integer>> item : list){
+		System.out.print(item._1);
+		int sum = 0;
+		for(Integer num: item._2){
+			System.out.print(" " + num + " ");
+			sum ++;
 		}
-	);
-	
-	List<Tuple2<String, Integer>> list1 = pairs.collect();
-	List<Tuple2<String, Integer>> list = counts.collect();
-	
-	System.out.println("BEFORE REDUCE");
-	for(Tuple2<String, Integer> item : list1){
-		System.out.println(item.toString());
+		System.out.print(" => " + sum + "\n");
 	}
 	
-	System.out.println("AFTER REDUCE");
-	for(Tuple2<String, Integer> item : list){
-		System.out.println(item.toString());
-	}
+	
   }
 }
